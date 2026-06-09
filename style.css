@@ -168,3 +168,43 @@ h2{font-size:28px}
 .fullscreen-touch-dot[data-touch="c"]{left:50%;top:50%;transform:translate(-50%,-50%)}
 .fullscreen-touch-dot[data-touch="bl"]{left:28px;bottom:28px}
 .fullscreen-touch-dot[data-touch="br"]{right:28px;bottom:28px}
+
+
+/* v1.3 spec cards */
+.spec-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:10px;
+  margin:18px 0;
+}
+.spec-card{
+  background:#0f172a;
+  border:1px solid #475569;
+  border-radius:14px;
+  padding:14px;
+  min-height:88px;
+}
+.spec-card .label{
+  color:#cbd5e1;
+  font-size:14px;
+  font-weight:800;
+  margin-bottom:6px;
+}
+.spec-card .value{
+  color:#f8fafc;
+  font-size:20px;
+  font-weight:900;
+  word-break:break-word;
+}
+.spec-card.warn{
+  border-color:#f59e0b;
+  box-shadow:0 0 0 2px #f59e0b33;
+}
+.spec-card.bad{
+  border-color:#ef4444;
+  box-shadow:0 0 0 2px #ef444433;
+}
+.small-note{
+  font-size:13px;
+  color:#94a3b8;
+}

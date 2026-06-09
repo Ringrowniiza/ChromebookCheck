@@ -28,7 +28,27 @@ function render(){
   const c = document.getElementById("content");
 
   if(idx===0){
-    c.innerHTML = `<div class="center"><div class="big">Chromebook Check</div><p class="sub">画面の指示に従って、OK / NG を選ぶだけ。</p><button class="btn start" onclick="next()">▶ START</button></div>`;
+    c.innerHTML = `
+      <div class="center">
+        <div class="big">Chromebook Check</div>
+        <p class="sub">端末情報を確認してから検査を開始します。</p>
+      </div>
+      <div id="specGrid" class="spec-grid">
+        <div class="spec-card"><div class="label">ChromeOS / ブラウザ</div><div class="value" id="specChrome">取得中...</div></div>
+        <div class="spec-card"><div class="label">画面解像度</div><div class="value" id="specResolution">取得中...</div></div>
+        <div class="spec-card"><div class="label">バッテリー</div><div class="value" id="specBattery">取得中...</div></div>
+        <div class="spec-card"><div class="label">充電状態</div><div class="value" id="specCharging">取得中...</div></div>
+        <div class="spec-card"><div class="label">ストレージ推定</div><div class="value" id="specStorage">取得中...</div></div>
+        <div class="spec-card"><div class="label">ネットワーク</div><div class="value" id="specOnline">取得中...</div></div>
+      </div>
+      <div class="note">
+        <strong>注意：</strong>ゲストモードのWeb検査では、CPU/メモリ/シリアル/MACの正確取得はできません。<br>
+        ストレージはブラウザが利用可能な領域からの推定表示です。
+      </div>
+      <div class="actions">
+        <button class="btn start" onclick="next()">▶ 検査開始</button>
+      </div>`;
+    collectSpecs();
     return;
   }
   if(idx===1){
@@ -90,10 +110,10 @@ function wait(ms){return new Promise(r=>setTimeout(r,ms));}
 async function playTone(freq, pan, label, side){
   const AudioCtx=window.AudioContext||window.webkitAudioContext; const ctx=new AudioCtx();
   const osc=ctx.createOscillator(); const gain=ctx.createGain(); const panner=ctx.createStereoPanner?ctx.createStereoPanner():null;
-  osc.frequency.value=freq; osc.type="sine"; gain.gain.value=0.12;
+  osc.frequency.value=freq; osc.type="sine"; gain.gain.value=0.35;
   if(panner){panner.pan.value=pan;osc.connect(gain).connect(panner).connect(ctx.destination);}else{osc.connect(gain).connect(ctx.destination);}
   document.getElementById(side+"Tone").textContent=label; document.getElementById(side+"Speaker").classList.add("active");
-  osc.start(); await wait(420); osc.stop(); ctx.close(); document.getElementById(side+"Speaker").classList.remove("active");
+  osc.start(); await wait(560); osc.stop(); ctx.close(); document.getElementById(side+"Speaker").classList.remove("active");
 }
 async function playSpeakerTest(){
   document.getElementById("leftTone").textContent="待機";document.getElementById("rightTone").textContent="待機";
@@ -269,6 +289,58 @@ function closeTouchFullscreen(e){
   if(e) e.stopPropagation();
   document.getElementById("touchFullscreen")?.classList.remove("show");
   exitFullScreen();
+}
+
+
+async function collectSpecs(){
+  const ua = navigator.userAgent || "";
+  const chromeMatch = ua.match(/CrOS\s+([^\s]+)\s+([0-9.]+)/);
+  const chromeText = chromeMatch ? `ChromeOS ${chromeMatch[2]}` : "ChromeOS情報取得不可";
+  const specChrome = document.getElementById("specChrome");
+  if(specChrome) specChrome.textContent = chromeText;
+
+  const res = `${screen.width} × ${screen.height} / DPR ${window.devicePixelRatio || 1}`;
+  const specResolution = document.getElementById("specResolution");
+  if(specResolution) specResolution.textContent = res;
+
+  const specOnline = document.getElementById("specOnline");
+  if(specOnline) specOnline.textContent = navigator.onLine ? "接続中" : "未接続";
+
+  const specBattery = document.getElementById("specBattery");
+  const specCharging = document.getElementById("specCharging");
+  if("getBattery" in navigator){
+    try{
+      const b = await navigator.getBattery();
+      if(specBattery) specBattery.textContent = `${Math.round(b.level * 100)}%`;
+      if(specCharging) specCharging.textContent = b.charging ? "充電中" : "未充電";
+      if(b.level < 0.2){
+        specBattery?.closest(".spec-card")?.classList.add("bad");
+      }
+    }catch(e){
+      if(specBattery) specBattery.textContent = "取得不可";
+      if(specCharging) specCharging.textContent = "取得不可";
+    }
+  }else{
+    if(specBattery) specBattery.textContent = "非対応";
+    if(specCharging) specCharging.textContent = "非対応";
+  }
+
+  const specStorage = document.getElementById("specStorage");
+  if(navigator.storage && navigator.storage.estimate){
+    try{
+      const est = await navigator.storage.estimate();
+      const quotaGB = est.quota ? est.quota / (1024**3) : 0;
+      let text = "推定不可";
+      if(quotaGB > 0){
+        text = `約 ${Math.round(quotaGB)} GB`;
+      }
+      if(specStorage) specStorage.textContent = text;
+    }catch(e){
+      if(specStorage) specStorage.textContent = "取得不可";
+    }
+  }else{
+    if(specStorage) specStorage.textContent = "非対応";
+  }
 }
 
 render();
