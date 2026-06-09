@@ -52,8 +52,31 @@ function render(){
     return;
   }
   if(idx===1){
-    c.innerHTML = `<div class="keyboard-head"><div><h2>キーボード</h2><div class="sub">押したキーが緑になります。全部緑になったら自動で次へ。</div></div><div class="counter" id="keyCounter">残り ${requiredKeys.length}</div></div><input id="keyInput" autofocus><div class="keyboard" id="keyboard"></div><div class="note">※ 上段キーはChromeOS仕様で拾えない場合があります。拾えない時は「OK」で進めます。</div><div class="actions"><button class="btn ng" onclick="fail('キーボード')">❌ NG</button><button class="btn ok" onclick="passStep('キーボード')">✅ OK</button></div>`;
-    drawKeyboard(); setTimeout(()=>document.getElementById("keyInput")?.focus(),100); return;
+    c.innerHTML = `
+      <h2>キーボード</h2>
+      <div class="sub">ChromeOS標準の診断ツールでキーボードを確認します。</div>
+
+      <div class="note">
+        <strong>手順</strong><br>
+        1. 下の「診断ツールを開く」を押す<br>
+        2. 開けない場合は、アドレスバーに <strong>chrome://diagnostics</strong> を入力<br>
+        3. 診断ツール内のキーボードテストを実行<br>
+        4. この画面に戻って OK / NG を選択
+      </div>
+
+      <div class="diagnostic-url" onclick="copyDiagnosticsUrl()">
+        chrome://diagnostics
+      </div>
+
+      <div class="actions">
+        <button class="btn start" onclick="openDiagnostics()">▶ 診断ツールを開く</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn ng" onclick="fail('キーボード')">❌ NG</button>
+        <button class="btn ok" onclick="passStep('キーボード')">✅ OK</button>
+      </div>`;
+    return;
   }
   if(idx===2){
     c.innerHTML = `<h2>スピーカー</h2><div class="sub">左「ド・ソ・シ」→右「ド・ソ・シ」を自動再生します。</div><div class="speaker-box"><div class="speaker" id="leftSpeaker"><h2>左</h2><div class="tone" id="leftTone">待機</div></div><div class="speaker" id="rightSpeaker"><h2>右</h2><div class="tone" id="rightTone">待機</div></div></div><div class="center"><button class="btn start" onclick="playSpeakerTest()">▶ テスト開始</button></div><div class="actions"><button class="btn ng" onclick="fail('スピーカー')">❌ NG</button><button class="btn ok" onclick="passStep('スピーカー')">✅ OK</button></div>`;
@@ -340,6 +363,24 @@ async function collectSpecs(){
     }
   }else{
     if(specStorage) specStorage.textContent = "非対応";
+  }
+}
+
+
+function openDiagnostics(){
+  try{
+    window.open("chrome://diagnostics", "_blank");
+  }catch(e){}
+  try{
+    location.href = "chrome://diagnostics";
+  }catch(e){}
+}
+async function copyDiagnosticsUrl(){
+  try{
+    await navigator.clipboard.writeText("chrome://diagnostics");
+    alert("chrome://diagnostics をコピーしました");
+  }catch(e){
+    alert("アドレスバーに chrome://diagnostics と入力してください");
   }
 }
 
