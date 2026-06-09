@@ -170,12 +170,13 @@ function render(){
   }
 
   if(idx === 7){
+    const hasFail = Object.values(results).includes("NG");
     const items = Object.entries(results).map(([k,v]) => `
       <div class="item"><div class="label">${k}</div><div class="value ${v === "OK" ? "pass" : "fail"}">${v}</div></div>
     `).join("");
     frame(`
-      <div class="big pass">🎉 PASS</div>
-      <div class="center sub">検査完了</div>
+      <div class="big ${hasFail ? "fail" : "pass"}">${hasFail ? "❌ FAIL" : "🎉 PASS"}</div>
+      <div class="center sub">${hasFail ? "NGの項目があります" : "検査完了"}</div>
       <div class="grid">${items}</div>
       <div class="actions"><button class="btn start" onclick="location.reload()">次の端末</button></div>
     `);
@@ -244,7 +245,7 @@ function parseSystemInfo(){
   document.getElementById("parsedMem").textContent = mem;
 
   let storage = "未検出";
-  const secMatch = text.match(/(?:SEC_COUNT|sector count|sectors|rel_sectors)\s*[:|]\s*([0-9]+)/i);
+  const secMatch = text.match(/(?:sec_count|sector\s*count|"sectors"|rel_sectors)\s*[:|"]\s*([0-9]+)/i);
   if(secMatch){
     const gb = Number(secMatch[1]) * 512 / (1000 ** 3);
     storage = normalizeStorage(gb);
@@ -265,8 +266,7 @@ function normalizeStorage(gb){
 }
 
 function openDiagnostics(){
-  try{ window.open("chrome://diagnostics","_blank"); }catch(e){}
-  alert("開けない場合は、アドレスバーに chrome://diagnostics と入力してください");
+  alert("アドレスバーに chrome://diagnostics と入力してキーボードテストを実施してください");
 }
 
 async function copyDiagnosticsUrl(){
@@ -348,6 +348,9 @@ async function playSpeakerTest(){
   document.getElementById("leftTone").textContent = "待機";
   document.getElementById("rightTone").textContent = "待機";
 
+  const btn = document.querySelector("button[onclick='playSpeakerTest()']");
+  if(btn) btn.disabled = true;
+
   for(const [f,l] of notes){
     await playTone(f, -1, l, "left");
     await wait(80);
@@ -359,6 +362,8 @@ async function playSpeakerTest(){
     await wait(80);
   }
   document.getElementById("rightTone").textContent = "完了";
+
+  if(btn) btn.disabled = false;
 }
 
 async function refreshCameraDevices(){
@@ -389,6 +394,10 @@ async function startCamera(deviceId=null){
 }
 
 async function switchCamera(){
+  if(!cameraStream){
+    await startCamera();
+    return;
+  }
   await refreshCameraDevices();
   if(cameraDevices.length <= 1){
     alert("切替可能なカメラが見つかりません");
@@ -532,7 +541,7 @@ function markTouch(e, dot){
   e.preventDefault();
   dot.classList.add("hit");
   touched.add(dot.dataset.touch);
-  if(touched.size === 5 && idx === 5){
+  if(touched.size === 5 && lcdMode === "touch"){
     results["液晶＋タッチパネル"] = "OK";
     setTimeout(() => {
       closeFs();
