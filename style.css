@@ -79,3 +79,92 @@ h1,h2{margin:0} h1{font-size:28px} h2{font-size:34px;margin-bottom:10px}
 .touch-dot[data-touch="c"]{left:50%;top:50%;transform:translate(-50%,-50%)}
 .touch-dot[data-touch="bl"]{left:24px;bottom:24px}
 .touch-dot[data-touch="br"]{right:24px;bottom:24px}
+
+
+/* v1.2 compact / fullscreen */
+#app{max-width:1040px;padding:10px}
+.card{padding:16px}
+.stage{min-height:480px}
+h1{font-size:24px}
+h2{font-size:28px}
+.sub{font-size:16px}
+.btn{padding:13px 22px;font-size:20px}
+.progress-wrap{margin:10px 0 14px}
+.keyboard{max-height:430px}
+.key{height:42px;font-size:13px;min-width:48px}
+.row{gap:5px;margin-bottom:5px;min-width:900px}
+.touch-fullscreen,
+.lcd-fullscreen{
+  position:fixed;
+  inset:0;
+  z-index:90;
+  background:#020617;
+  color:white;
+  display:none;
+  padding:18px;
+}
+.touch-fullscreen.show,
+.lcd-fullscreen.show{
+  display:block;
+}
+.fullscreen-top{
+  position:absolute;
+  top:14px;
+  left:14px;
+  right:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:2;
+}
+.fullscreen-title{
+  font-size:28px;
+  font-weight:900;
+  background:#111827cc;
+  padding:10px 16px;
+  border-radius:12px;
+}
+.fullscreen-exit{
+  width:auto;
+  margin:0;
+  background:#111827;
+  color:white;
+  border:1px solid #64748b;
+}
+.lcd-color-name{
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:72px;
+  font-weight:900;
+}
+.fullscreen-touch-area{
+  position:absolute;
+  inset:0;
+  touch-action:none;
+}
+.fullscreen-touch-dot{
+  position:absolute;
+  width:104px;
+  height:104px;
+  border-radius:50%;
+  background:#2563eb;
+  border:5px solid #93c5fd;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  user-select:none;
+}
+.fullscreen-touch-dot.hit{
+  background:#22c55e;
+  border-color:#86efac;
+  color:#052e16;
+}
+.fullscreen-touch-dot[data-touch="tl"]{left:28px;top:84px}
+.fullscreen-touch-dot[data-touch="tr"]{right:28px;top:84px}
+.fullscreen-touch-dot[data-touch="c"]{left:50%;top:50%;transform:translate(-50%,-50%)}
+.fullscreen-touch-dot[data-touch="bl"]{left:28px;bottom:28px}
+.fullscreen-touch-dot[data-touch="br"]{right:28px;bottom:28px}

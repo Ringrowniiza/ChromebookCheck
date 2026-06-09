@@ -48,12 +48,11 @@ function render(){
     return;
   }
   if(idx===5){
-    c.innerHTML = `<h2>液晶</h2><div class="sub">白→黒→赤→緑→青を全画面で確認します。画面タップで次の色。</div><div class="center"><button class="btn start" onclick="showColor()">▶ 色テスト開始</button></div><div class="actions"><button class="btn ng" onclick="fail('液晶')">❌ NG</button><button class="btn ok" onclick="passStep('液晶')">✅ OK</button></div>`;
+    c.innerHTML = `<h2>液晶</h2><div class="sub">全画面で白→黒→赤→緑→青を確認します。画面タップで次の色。</div><div class="center"><button class="btn start" onclick="startLcdFullscreen()">▶ 全画面で色テスト</button></div><div class="actions"><button class="btn ng" onclick="fail('液晶')">❌ NG</button><button class="btn ok" onclick="passStep('液晶')">✅ OK</button></div>`;
     return;
   }
   if(idx===6){
     c.innerHTML = `<h2>タッチパネル</h2><div class="sub">画面の5か所を指でタッチします。全部緑になったら自動で次へ。</div><div class="touch-screen" id="touchScreen"><div class="touch-dot" data-touch="tl">左上</div><div class="touch-dot" data-touch="tr">右上</div><div class="touch-dot" data-touch="c">中央</div><div class="touch-dot" data-touch="bl">左下</div><div class="touch-dot" data-touch="br">右下</div></div><div class="note">※ マウスクリックでも反応しますが、実機検査では必ず指でタッチしてください。</div><div class="actions"><button class="btn ng" onclick="fail('タッチパネル')">❌ NG</button><button class="btn ok" onclick="passStep('タッチパネル')">✅ OK</button></div>`;
-    setTimeout(setupTouchPanel,100);
     return;
   }
   if(idx===7){
@@ -153,6 +152,123 @@ function setupTouchPanel(){
     dot.addEventListener("pointerdown", mark);
     dot.addEventListener("click", mark);
   });
+}
+
+
+async function requestFullScreen(el){
+  try{
+    if(el.requestFullscreen) await el.requestFullscreen();
+    else if(el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+  }catch(e){}
+}
+async function exitFullScreen(){
+  try{
+    if(document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+    else if(document.webkitFullscreenElement && document.webkitExitFullscreen) await document.webkitExitFullscreen();
+  }catch(e){}
+}
+
+const lcdColors = [
+  ["WHITE","white","black"],
+  ["BLACK","black","white"],
+  ["RED","red","white"],
+  ["GREEN","lime","black"],
+  ["BLUE","blue","white"]
+];
+let lcdIndex = 0;
+function startLcdFullscreen(){
+  let box = document.getElementById("lcdFullscreen");
+  if(!box){
+    box = document.createElement("div");
+    box.id = "lcdFullscreen";
+    box.className = "lcd-fullscreen";
+    box.innerHTML = `<div class="fullscreen-top"><div class="fullscreen-title">液晶色テスト</div><button class="btn fullscreen-exit" onclick="closeLcdFullscreen(event)">閉じる</button></div><div id="lcdColorName" class="lcd-color-name">WHITE</div>`;
+    document.body.appendChild(box);
+    box.addEventListener("click", nextLcdColor);
+  }
+  lcdIndex = 0;
+  box.classList.add("show");
+  renderLcdColor();
+  requestFullScreen(box);
+}
+function renderLcdColor(){
+  const box = document.getElementById("lcdFullscreen");
+  const label = document.getElementById("lcdColorName");
+  const [name,bg,fg] = lcdColors[lcdIndex];
+  box.style.background = bg;
+  box.style.color = fg;
+  label.textContent = name;
+}
+function nextLcdColor(e){
+  if(e && e.target && e.target.classList.contains("fullscreen-exit")) return;
+  lcdIndex++;
+  if(lcdIndex >= lcdColors.length){
+    closeLcdFullscreen();
+  }else{
+    renderLcdColor();
+  }
+}
+function closeLcdFullscreen(e){
+  if(e) e.stopPropagation();
+  document.getElementById("lcdFullscreen")?.classList.remove("show");
+  exitFullScreen();
+}
+
+function startTouchFullscreen(){
+  let box = document.getElementById("touchFullscreen");
+  if(!box){
+    box = document.createElement("div");
+    box.id = "touchFullscreen";
+    box.className = "touch-fullscreen";
+    box.innerHTML = `
+      <div class="fullscreen-top">
+        <div class="fullscreen-title">タッチパネル検査：5か所をタッチ</div>
+        <button class="btn fullscreen-exit" onclick="closeTouchFullscreen(event)">閉じる</button>
+      </div>
+      <div class="fullscreen-touch-area">
+        <div class="fullscreen-touch-dot" data-touch="tl">左上</div>
+        <div class="fullscreen-touch-dot" data-touch="tr">右上</div>
+        <div class="fullscreen-touch-dot" data-touch="c">中央</div>
+        <div class="fullscreen-touch-dot" data-touch="bl">左下</div>
+        <div class="fullscreen-touch-dot" data-touch="br">右下</div>
+      </div>`;
+    document.body.appendChild(box);
+  }
+  box.classList.add("show");
+  box.querySelectorAll("[data-touch]").forEach(d=>d.classList.remove("hit"));
+  const touched = new Set();
+  box.querySelectorAll("[data-touch]").forEach(dot=>{
+    dot.onpointerdown = (e)=>{
+      e.preventDefault();
+      dot.classList.add("hit");
+      touched.add(dot.dataset.touch);
+      if(touched.size === 5 && idx === 6){
+        results["タッチパネル"] = "OK";
+        setTimeout(()=>{
+          closeTouchFullscreen();
+          next();
+        }, 500);
+      }
+    };
+    dot.ontouchstart = (e)=>{
+      e.preventDefault();
+      dot.classList.add("hit");
+      touched.add(dot.dataset.touch);
+      if(touched.size === 5 && idx === 6){
+        results["タッチパネル"] = "OK";
+        setTimeout(()=>{
+          closeTouchFullscreen();
+          next();
+        }, 500);
+      }
+    };
+  });
+  requestFullScreen(box);
+}
+function closeTouchFullscreen(e){
+  if(e) e.stopPropagation();
+  document.getElementById("touchFullscreen")?.classList.remove("show");
+  exitFullScreen();
 }
 
 render();
